@@ -1,31 +1,36 @@
-// const { useState, useEffect } = React;
+
+const { useState, useEffect } = React;
 
 const API_CLAVE = "24aab2eb8aec803263f83e8daefaa6f4";
 
 const AppClima = () => {
     const [clima, setClima] = useState(null);
-    const [ciudadSeleccionada, setCiudadSeleccionada] = useState("Buenos Aires");
+    const [ciudadSeleccionada, setCiudadSeleccionada] = useState("Madrid");
     const [entradaBuscar, setEntradaBuscar] = useState("");
     const urlIcono = clima ? `./openweathermap/${clima.weather[0].icon}.svg` : "";
 
     const obtenerClima = async (ciudad) => {
-        const respuesta = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${API_CLAVE}&units=metric`
-        );
-        const datos = await respuesta.json();
-        setClima(datos);
-
-        // Guardar en el historial
-        await fetch('http://localhost:3000/clima', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                ciudad: datos.name,
-                clima: `Temperatura: ${datos.main.temp}C°, Mínima: ${datos.main.temp_min}C°, Máxima: ${datos.main.temp_max}C°, Humedad: ${datos.main.humidity}%`
-            })
-        });
+        try {
+            const respuesta = await fetch(
+                `https://api.openweathermap.org/data/2.5/weather?q=${ciudad}&appid=${API_CLAVE}&units=metric`
+            );
+            const datos = await respuesta.json();
+            setClima(datos);
+            
+            // Guarda la búsqueda en el servidor
+            await fetch('http://localhost:3000/clima', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ciudad: datos.name,
+                    clima: `Temperatura: ${datos.main.temp}C°, Mínima: ${datos.main.temp_min}C°, Máxima: ${datos.main.temp_max}C°, Humedad: ${datos.main.humidity}%`
+                })
+            });
+        } catch (error) {
+            console.error('Error al obtener el clima o guardar en el servidor', error);
+        }
     };
 
     useEffect(() => {
@@ -36,10 +41,9 @@ const AppClima = () => {
         setEntradaBuscar(evento.target.value);
     };
 
-    const manejarBuscar = async () => {
+    const manejarBuscar = () => {
         if (entradaBuscar.trim() !== "") {
             setCiudadSeleccionada(entradaBuscar);
-            await obtenerClima(entradaBuscar);
             setEntradaBuscar("");
         }
     };
@@ -55,7 +59,7 @@ const AppClima = () => {
             <nav>
                 <ul>
                     <li>
-                        <h1 className="title">Aplicacion del clima</h1>
+                        <h1 className="title">Weather App</h1>
                     </li>
                 </ul>
             </nav>
